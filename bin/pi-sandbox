@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+#
+# pi-sandbox — run the pi coding agent inside the pi-sandbox Docker image.
+#
+# The current working directory is mounted at /workspace and the global
+# ~/.pi folder is mounted into the container user's home directory.
+#
+# Additional volume mounts can be passed with -v/--volume:
+#
+#     pi-sandbox -v /path/on/host:/path/in/container [more -v ...] [pi args...]
+#
+set -euo pipefail
+
+# Base volume mounts: current dir and the global .pi config folder.
+# As well as the folder where the pi socket is available
+mounts=(
+  -v "$PWD:/workspace"
+  -v "$HOME/.pi:/home/fatz/.pi"
+  -v "/tmp/pi-nvim-sockets:/tmp/pi-nvim-sockets"
+  -v "$HOME/.kube:/home/fatz/.kube"
+  -v "$HOME/.config/doctl:/home/fatz/.config/doctl"
+  -v "$HOME/.config/herdr:/home/fatz/.config/herdr"
+)
+
+# Collect any extra -v/--volume mappings; everything else is passed to pi.
+pi_args=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -v|--volume)
+      if [[ $# -lt 2 ]]; then
+        echo "pi-sandbox: option '$1' requires an argument (host:container)" >&2
+        exit 1
+      fi
+      mounts+=(-v "$2")
+      shift 2
+      ;;
+    -v*)
+      # Support -v/host:container joined form.
+      mounts+=(-v "${1#-v}")
+      shift
+      ;;
+    --volume=*)
+      mounts+=(-v "${1#--volume=}")
+      shift
+      ;;
+    *)
+      pi_args+=("$1")
+      shift
+      ;;
+  esac
+done
+
+exec docker run --rm -it \
+  -e YOUTRACK_REST_API_URL \
+  -e YOUTRACK_REST_API_TOKEN \
+  --network=host \
+  --pid=host \
+  "${mounts[@]}" \
+  pi-sandbox \
+  "${pi_args[@]}"
