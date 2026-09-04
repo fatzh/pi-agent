@@ -8,6 +8,7 @@ RUN apt-get update -qy && apt-get dist-upgrade -qy && \
     ripgrep \
     build-essential \
     kubectl \
+    sudo \
     unzip && \
     apt-get -qqy autoremove && apt-get -qqy autoclean
 
@@ -20,22 +21,28 @@ RUN curl -fsSL "https://github.com/digitalocean/doctl/releases/download/v${DOCTL
 # install node, see https://nodesource.com/products/distributions
 RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash -
 RUN apt-get install -qy nodejs
+
 # and install pi.dev
 RUN npm install -g npm@12.0.2 && npm install -g --ignore-scripts --min-release-age=0 @earendil-works/pi-coding-agent
 
-# Run non privileged
-RUN groupadd --gid 1000 fatz
-RUN useradd --create-home --home-dir /home/fatz --shell /bin/bash \
-    --gid 1000 --uid 1000 fatz
+# Set compatible UID/GID for created files
+RUN groupadd --gid 1000 pi
+RUN useradd --create-home --home-dir /home/pi --shell /bin/bash \
+    --gid 1000 --uid 1000 pi
 
-USER fatz
+# pi user ccan sudo
+RUN usermod -aG sudo pi
 
-# install hunk
+# without password
+RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
+USER pi
+
+# Install hunk.dev
 RUN curl -fsSL https://hunk.dev/install.sh | sh
+
 # PATH
-ENV PATH="$PATH:/home/fatz/.local/bin:/home/fatz/.hunk/bin"
-
-
+ENV PATH="$PATH:/home/pi/.local/bin:/home/pi/.hunk/bin"
 
 WORKDIR /workspace
 

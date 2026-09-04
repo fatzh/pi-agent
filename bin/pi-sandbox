@@ -15,11 +15,10 @@ set -euo pipefail
 # As well as the folder where the pi socket is available
 mounts=(
   -v "$PWD:/workspace"
-  -v "$HOME/.pi:/home/fatz/.pi"
+  -v "$HOME/.pi:/home/pi/.pi"
   -v "/tmp/pi-nvim-sockets:/tmp/pi-nvim-sockets"
-  -v "$HOME/.kube:/home/fatz/.kube"
-  -v "$HOME/.config/doctl:/home/fatz/.config/doctl"
-  -v "$HOME/.config/herdr:/home/fatz/.config/herdr"
+  -v "$HOME/.kube:/home/pi/.kube"
+  -v "$HOME/.config/doctl:/home/pi/.config/doctl"
 )
 
 # Collect any extra -v/--volume mappings; everything else is passed to pi.
