@@ -18,6 +18,11 @@ RUN curl -fsSL "https://github.com/digitalocean/doctl/releases/download/v${DOCTL
     | tar -xz -C /usr/local/bin doctl && \
     chmod +x /usr/local/bin/doctl
 
+# Go
+ARG GO_VERSION=1.27.3
+RUN curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" | tar -xz -C /usr/local go
+ENV PATH="$PATH:/usr/local/go/bin"
+
 # install node, see https://nodesource.com/products/distributions
 RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash -
 RUN apt-get install -qy nodejs
