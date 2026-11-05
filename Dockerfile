@@ -9,6 +9,7 @@ RUN apt-get update -qy && apt-get dist-upgrade -qy && \
     build-essential \
     kubectl \
     sudo \
+    docker-cli \
     unzip && \
     apt-get -qqy autoremove && apt-get -qqy autoclean
 
@@ -23,6 +24,11 @@ ARG GO_VERSION=1.27.3
 RUN curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" | tar -xz -C /usr/local go
 ENV PATH="$PATH:/usr/local/go/bin"
 
+# Kubectl
+RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && \
+    install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+
+
 # install node, see https://nodesource.com/products/distributions
 RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash -
 RUN apt-get install -qy nodejs
@@ -35,8 +41,12 @@ RUN groupadd --gid 1000 pi
 RUN useradd --create-home --home-dir /home/pi --shell /bin/bash \
     --gid 1000 --uid 1000 pi
 
-# pi user ccan sudo
+# pi user can sudo
 RUN usermod -aG sudo pi
+
+# pi user can docker
+RUN groupadd -g 991 docker \
+    && usermod -aG docker pi
 
 # without password
 RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
